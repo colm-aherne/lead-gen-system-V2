@@ -1,0 +1,3 @@
+serpapi
+supabase
+google-genai
