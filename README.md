@@ -1,16 +1,16 @@
 # Cork Lead Generation System
 
-This repository provides a weekly, GitHub-hosted workflow for identifying qualifying Cork service businesses in Google Maps and drafting concise web-design outreach copy for human review. It **does not send emails** and the included status helper only records operational outcomes in the existing Supabase tables.
+This repository provides a weekly, GitHub-hosted workflow for identifying qualifying Cork service businesses in Google Maps and drafting concise web-design outreach copy for human review. It **does not send emails**; sending remains a deliberate manual Gmail step.
 
 ## Workflow
 
-The scheduled workflow runs every Monday at 08:00 UTC. It performs nine Google Maps searches, deduplicates records by `place_id`, and writes them to the existing `lgs_leads` table. The drafting step selects leads whose status is `new` and which have not opted out, generates a three-to-four sentence web-design email body, validates it, stores it in `lgs_outreach_tracker`, and changes the lead status to `drafted`.
+The scheduled workflow runs every Monday at 08:00 UTC. It performs nine Google Maps searches, deduplicates records by `place_id`, and writes them to the existing `lgs_leads` table. The drafting step selects leads whose status is `new` and which have not opted out, generates a three-to-four sentence web-design email body, validates it, inserts it as `email_draft` in `lgs_outreach_tracker`, and changes the source lead status to `drafted`.
 
 > The repository deliberately contains no table-creation or migration commands. The existing `lgs_leads` and `lgs_outreach_tracker` tables are the only tables accessed by these scripts; the unrelated `leads` table is never read or written.
 
 ## Required secrets
 
-Configure these repository secrets before enabling the workflow:
+Configure these repository secrets before manually testing or allowing the workflow to run:
 
 | Secret | Used by | Purpose |
 | --- | --- | --- |
@@ -39,9 +39,11 @@ python scripts/draft_leads.py
 
 ## Existing table contract
 
-`sql/leads_schema.sql` documents the fields consumed by the scripts. It is **not executable schema setup**. In particular, `lgs_leads.google_place_id` must be uniquely constrained because the ingestion script uses an `on_conflict=google_place_id` upsert.
+`sql/leads_schema.sql` documents the live fields used by the scripts. It is **not executable schema setup**. In particular, `lgs_leads.google_place_id` must remain unique because the ingestion script uses an atomic `on_conflict=google_place_id` upsert.
 
-The lead table must provide a `status` default of `new` for newly inserted rows. Existing rows retain their current status during the upsert. When the upsert response shows that a row existed before the current run, the script changes only an existing `new` status to `verified`. This avoids a preliminary select-then-write pattern and protects `drafted`, `moved`, and `opted_out` records.
+New records receive the existing table default of `status='new'`. Existing rows retain their status during the upsert; once an existing `new` row is detected, the script changes it to `verified`. The permitted lead statuses are exactly `new`, `verified`, `moved`, `opted_out`, and `drafted`.
+
+Email drafts are stored in `lgs_outreach_tracker.email_draft`. The manual helper updates the established tracker fields: `email_sent` and `sent_at` when recording a send, and `response_received`, `response_text`, and `response_date` when recording a response.
 
 ## Manual status helpers
 
@@ -55,7 +57,7 @@ log_response("tracker-row-id", "Interested — please follow up next week.")
 mark_opted_out("lead-row-id")
 ```
 
-`mark_opted_out` also sets the corresponding lead's `opted_out` flag so future drafting runs exclude it. None of the helpers execute automatically when the module is imported.
+`mark_sent` records a send only; it does not send an email. `mark_opted_out` also sets the corresponding lead's `opted_out` flag so future drafting runs exclude it. None of the helpers execute automatically when the module is imported.
 
 ## Compliance and review
 

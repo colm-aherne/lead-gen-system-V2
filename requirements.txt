@@ -1,3 +1,4 @@
 serpapi
 supabase
 google-genai
+python-dotenv

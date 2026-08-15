@@ -17,11 +17,15 @@ from pathlib import Path
 from typing import Any
 
 import serpapi
+from dotenv import load_dotenv
 from supabase import Client, create_client
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+# Loads a local, gitignored .env without overriding GitHub Actions secrets.
+load_dotenv(ROOT / ".env")
 
 from config.search_queries import SEARCH_QUERIES
 

@@ -12,8 +12,10 @@ from __future__ import annotations
 import logging
 import os
 import re
+from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 from supabase import Client, create_client
@@ -23,6 +25,9 @@ OUTREACH_TABLE = "lgs_outreach_tracker"
 MODEL_NAME = "gemini-2.5-flash"
 MAX_WORDS = 149
 VALID_STATUSES = {"new", "verified", "moved", "opted_out", "drafted"}
+
+# Loads a local, gitignored .env without overriding GitHub Actions secrets.
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 LOGGER = logging.getLogger(__name__)
@@ -110,7 +115,7 @@ def save_draft_and_mark_lead(supabase: Client, lead_id: Any, draft: str) -> None
     """Persist a validated draft, then mark only its source lead as drafted."""
     (
         supabase.table(OUTREACH_TABLE)
-        .insert({"lead_id": lead_id, "draft_body": draft})
+        .insert({"lead_id": lead_id, "email_draft": draft})
         .execute()
     )
     (

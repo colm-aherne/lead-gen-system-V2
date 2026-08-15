@@ -8,13 +8,18 @@ from __future__ import annotations
 
 import os
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
+from dotenv import load_dotenv
 from supabase import Client, create_client
 
 LEADS_TABLE = "lgs_leads"
 OUTREACH_TABLE = "lgs_outreach_tracker"
 VALID_LEAD_STATUSES = {"new", "verified", "moved", "opted_out", "drafted"}
+
+# Loads a local, gitignored .env without overriding GitHub Actions secrets.
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 
 def _get_supabase() -> Client:
@@ -39,7 +44,7 @@ def mark_sent(tracker_id: Any) -> None:
     (
         _get_supabase()
         .table(OUTREACH_TABLE)
-        .update({"status": "sent", "sent_at": _utc_timestamp()})
+        .update({"email_sent": True, "sent_at": _utc_timestamp()})
         .eq("id", tracker_id)
         .execute()
     )
@@ -53,7 +58,13 @@ def log_response(tracker_id: Any, response_text: str) -> None:
     (
         _get_supabase()
         .table(OUTREACH_TABLE)
-        .update({"response_text": cleaned_response, "responded_at": _utc_timestamp()})
+        .update(
+            {
+                "response_received": True,
+                "response_text": cleaned_response,
+                "response_date": _utc_timestamp(),
+            }
+        )
         .eq("id", tracker_id)
         .execute()
     )

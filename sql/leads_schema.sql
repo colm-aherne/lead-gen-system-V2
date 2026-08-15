@@ -1,31 +1,35 @@
 -- Documentation only: do not run this file as a migration.
 --
--- The Supabase project already contains the tables below. This repository does
--- not create, alter, or migrate either table, and it never accesses the
+-- The Supabase project already contains the following tables. This repository
+-- must not create, alter, or migrate them. It also must never access the
 -- unrelated public.leads table.
 --
--- Expected public.lgs_leads fields consumed by scripts/lead_gen_places.py:
---   id                primary key used by outreach tracking
+-- Existing public.lgs_leads contract:
+--   id                bigserial primary key
 --   business_name     text
---   address           text, nullable
---   phone             text, nullable
---   website           text, nullable
---   business_type     text, nullable
---   google_place_id   text, unique (required for on_conflict upserts)
---   status            text constrained to exactly:
+--   address           text
+--   phone             text
+--   website           text
+--   business_type     text
+--   google_place_id   text unique
+--   status            text default 'new', constrained to exactly:
 --                     new | verified | moved | opted_out | drafted
---   opted_out         boolean, default false
---   last_seen_at      timestamptz
---   created_at        timestamptz, default now()
+--   opted_out         boolean default false
+--   last_seen_at      timestamp
+--   created_at        timestamp default now()
+--   updated_at        timestamp default now()
 --
--- Expected public.lgs_outreach_tracker fields consumed by scripts/draft_leads.py
--- and scripts/update_status.py:
---   id                primary key
---   lead_id           foreign key/reference to lgs_leads.id
---   draft_body        text
---   status            text, nullable (manual helper writes sent)
---   sent_at           timestamptz, nullable
---   response_text     text, nullable
---   responded_at      timestamptz, nullable
+-- Existing public.lgs_outreach_tracker contract:
+--   id                bigserial primary key
+--   lead_id           bigint references lgs_leads(id) on delete cascade
+--   email_draft       text
+--   email_sent        boolean default false
+--   sent_at           timestamp
+--   response_received boolean default false
+--   response_text     text
+--   response_date     timestamp
+--   notes             text
+--   created_at        timestamp default now()
+--   updated_at        timestamp default now()
 --
--- No SQL statements are included intentionally.
+-- No executable SQL statements are intentionally included.
