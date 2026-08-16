@@ -22,7 +22,7 @@ from supabase import Client, create_client
 
 LEADS_TABLE = "lgs_leads"
 OUTREACH_TABLE = "lgs_outreach_tracker"
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = "gemini-3.5-flash"
 MAX_WORDS = 149
 VALID_STATUSES = {"new", "verified", "moved", "opted_out", "drafted"}
 
