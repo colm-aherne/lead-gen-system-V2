@@ -2,11 +2,15 @@ name: Weekly Cork lead collection and draft generation
 
 on:
   schedule:
-    - cron: "0 8 * * 1"
+    - cron: "0 6 * * 1"
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: nationwide-ireland-lead-generation
+  cancel-in-progress: false
 
 jobs:
   collect-and-draft:
@@ -23,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Collect Cork Google Maps leads
+      - name: Collect nationwide Ireland Google Maps leads
         env:
           SERPAPI_API_KEY: ${{ secrets.SERPAPI_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

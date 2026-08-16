@@ -1,10 +1,12 @@
-# Cork Lead Generation System
+# Ireland Trade & Service Lead Generation System
 
-This repository provides a weekly, GitHub-hosted workflow for identifying qualifying Cork service businesses in Google Maps and drafting concise web-design outreach copy for human review. It **does not send emails**; sending remains a deliberate manual Gmail step.
+This repository provides a weekly, GitHub-hosted workflow for identifying qualifying AI-serviceable trade and service businesses across the island of Ireland through Google Maps, then drafting concise outreach copy for human review. It **does not send emails**; sending remains a deliberate manual Gmail step.
 
 ## Workflow
 
-The scheduled workflow runs every Monday at 08:00 UTC. It performs nine Google Maps searches, deduplicates records by `place_id`, and writes them to the existing `lgs_leads` table. The drafting step selects leads whose status is `new` and which have not opted out, generates a three-to-four sentence web-design email body, validates it, inserts it as `email_draft` in `lgs_outreach_tracker`, and changes the source lead status to `drafted`.
+The scheduled workflow runs every Monday at 06:00 UTC. It searches every county across the island of Ireland for HVAC contractors, electricians, plumbers, builders, roofers, landscapers, painters, locksmiths, carpet cleaners, property-maintenance firms, pest-control businesses, tree surgeons, drain cleaners, solar installers, and garage-door repair businesses. Results are deduplicated by `google_place_id` before writing to the existing `lgs_leads` table.
+
+The drafting step only selects `new`, non-opted-out leads that have **no** row in `lgs_outreach_tracker`. It generates a three-to-four sentence email body, validates it, stores it as `email_draft`, and changes the source lead status to `drafted`. A tracker entry is therefore a hard duplicate-outreach flag: businesses with a prior saved draft are never drafted again automatically. The workflow also has a GitHub Actions concurrency group to prevent overlapping runs.
 
 > The repository deliberately contains no table-creation or migration commands. The existing `lgs_leads` and `lgs_outreach_tracker` tables are the only tables accessed by these scripts; the unrelated `leads` table is never read or written.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Collect Cork service-business leads from Google Maps into ``lgs_leads``.
+"""Collect nationwide Ireland trade-business leads from Google Maps into ``lgs_leads``.
 
 The script performs one Google Maps search per configured category, deduplicates
 results by Google ``place_id``, and uses a bulk Supabase upsert with
@@ -27,9 +27,8 @@ if str(ROOT) not in sys.path:
 # Loads a local, gitignored .env without overriding GitHub Actions secrets.
 load_dotenv(ROOT / ".env")
 
-from config.search_queries import SEARCH_QUERIES
+from config.search_queries import SEARCH_AREAS, SEARCH_QUERIES
 
-GOOGLE_MAPS_CENTER = "@51.8985,-8.4756,12z"
 LEADS_TABLE = "lgs_leads"
 VALID_STATUSES = {"new", "verified", "moved", "opted_out", "drafted"}
 
@@ -92,13 +91,15 @@ def normalise_place(place: dict[str, Any], category: str, seen_at: str) -> dict[
     }
 
 
-def search_category(client: serpapi.Client, category: str, seen_at: str) -> list[dict[str, Any]]:
-    """Run one centred Google Maps query for a configured service category."""
+def search_category(
+    client: serpapi.Client, category: str, area: dict[str, str], seen_at: str
+) -> list[dict[str, Any]]:
+    """Run one county-centred Google Maps query for a configured service category."""
     result = client.search(
         {
             "engine": "google_maps",
-            "q": f"{category} in Cork, Ireland",
-            "ll": GOOGLE_MAPS_CENTER,
+            "q": f"{category} in {area['name']}",
+            "ll": area["ll"],
             "type": "search",
         }
     )
@@ -113,7 +114,7 @@ def search_category(client: serpapi.Client, category: str, seen_at: str) -> list
             lead = normalise_place(place, category, seen_at)
             if lead:
                 mapped.append(lead)
-    LOGGER.info("%s: collected %d qualifying map result(s)", category, len(mapped))
+    LOGGER.info("%s in %s: collected %d qualifying map result(s)", category, area["name"], len(mapped))
     return mapped
 
 
@@ -178,7 +179,7 @@ def upsert_leads(supabase: Client, leads: list[dict[str, Any]], run_started_at: 
 
 
 def main() -> None:
-    """Collect all configured categories and merge them into ``lgs_leads``."""
+    """Collect all nationwide categories and areas into ``lgs_leads``."""
     environment = require_environment("SERPAPI_API_KEY", "SUPABASE_URL", "SUPABASE_KEY")
     run_started_at = utc_now()
     seen_at = isoformat_utc(run_started_at)
@@ -187,8 +188,9 @@ def main() -> None:
     supabase = create_client(environment["SUPABASE_URL"], environment["SUPABASE_KEY"])
 
     collected: list[dict[str, Any]] = []
-    for category in SEARCH_QUERIES:
-        collected.extend(search_category(search_client, category, seen_at))
+    for area in SEARCH_AREAS:
+        for category in SEARCH_QUERIES:
+            collected.extend(search_category(search_client, category, area, seen_at))
 
     unique_leads = deduplicate_by_place_id(collected)
     upsert_leads(supabase, unique_leads, run_started_at)

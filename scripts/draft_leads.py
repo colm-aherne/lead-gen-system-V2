@@ -81,7 +81,7 @@ def build_prompt(lead: dict[str, Any]) -> str:
         else "No website is recorded; do not claim that one exists or is missing."
     )
 
-    return f"""Write only a friendly cold-email body for {business_name}, a {business_type} in Cork, Ireland.
+    return f"""Write only a friendly cold-email body for {business_name}, a {business_type} in Ireland.
 Pitch professional web design services. Keep it factual, personal, and non-pushy.
 Use exactly 3 or 4 complete sentences and fewer than 150 words.
 Do not include a subject line, greeting label, markdown, bullets, pricing, guarantees, invented business details, or a signature.
@@ -89,8 +89,18 @@ Do not include a subject line, greeting label, markdown, bullets, pricing, guara
 Return the email body only."""
 
 
-def fetch_eligible_leads(supabase: Client) -> list[dict[str, Any]]:
-    """Return leads that are new and have not opted out of draft generation."""
+def fetch_tracker_lead_ids(supabase: Client) -> set[int]:
+    """Return lead IDs with any outreach-tracker entry to prevent repeat drafting."""
+    response = supabase.table(OUTREACH_TABLE).select("lead_id").execute()
+    return {
+        int(row["lead_id"])
+        for row in (response.data or [])
+        if isinstance(row, dict) and row.get("lead_id") is not None
+    }
+
+
+def fetch_eligible_leads(supabase: Client, tracked_lead_ids: set[int]) -> list[dict[str, Any]]:
+    """Return new non-opted-out leads that have no prior outreach-tracker entry."""
     response = (
         supabase.table(LEADS_TABLE)
         .select("id,business_name,business_type,website")
@@ -98,7 +108,11 @@ def fetch_eligible_leads(supabase: Client) -> list[dict[str, Any]]:
         .eq("opted_out", False)
         .execute()
     )
-    return response.data or []
+    return [
+        row
+        for row in (response.data or [])
+        if isinstance(row, dict) and row.get("id") not in tracked_lead_ids
+    ]
 
 
 def generate_draft(client: genai.Client, lead: dict[str, Any]) -> str:
@@ -134,8 +148,13 @@ def main() -> None:
     supabase = create_client(environment["SUPABASE_URL"], environment["SUPABASE_KEY"])
     client = genai.Client()
 
-    eligible_leads = fetch_eligible_leads(supabase)
-    LOGGER.info("Found %d eligible new lead(s).", len(eligible_leads))
+    tracked_lead_ids = fetch_tracker_lead_ids(supabase)
+    eligible_leads = fetch_eligible_leads(supabase, tracked_lead_ids)
+    LOGGER.info(
+        "Found %d eligible new lead(s); excluded %d lead(s) with tracker entries.",
+        len(eligible_leads),
+        len(tracked_lead_ids),
+    )
 
     drafted = 0
     for lead in eligible_leads:
@@ -151,6 +170,7 @@ def main() -> None:
             continue
 
         save_draft_and_mark_lead(supabase, lead_id, draft)
+        tracked_lead_ids.add(int(lead_id))
         drafted += 1
 
     LOGGER.info("Saved %d validated draft(s).", drafted)
