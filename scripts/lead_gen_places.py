@@ -75,10 +75,15 @@ def normalise_place(place: dict[str, Any], category: str, seen_at: str) -> dict[
         LOGGER.warning("Skipping Google Maps result without place_id or title: %r", place)
         return None
 
+    address = place.get("address")
+    if not address:
+        LOGGER.warning("Skipping %s without an address: %s", business_name, place_id)
+        return None
+
     business_type = place.get("type") or place.get("category") or category
     return {
         "business_name": business_name,
-        "address": place.get("address"),
+        "address": address,
         "phone": place.get("phone"),
         "website": place.get("website") or place.get("link"),
         "business_type": business_type,
