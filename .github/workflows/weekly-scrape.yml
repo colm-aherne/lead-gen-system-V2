@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: "0 6 * * 1"
   workflow_dispatch:
+    inputs:
+      draft_leads:
+        description: "Generate drafts after collection"
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: read
@@ -35,6 +41,7 @@ jobs:
         run: python scripts/lead_gen_places.py
 
       - name: Draft eligible outreach emails
+        if: github.event_name == 'schedule' || inputs.draft_leads == true
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}

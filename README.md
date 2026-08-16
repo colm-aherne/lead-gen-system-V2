@@ -4,7 +4,7 @@ This repository provides a weekly, GitHub-hosted workflow for identifying qualif
 
 ## Workflow
 
-The scheduled workflow runs every Monday at 06:00 UTC. It searches every county across the island of Ireland for HVAC contractors, electricians, plumbers, builders, roofers, landscapers, painters, locksmiths, carpet cleaners, property-maintenance firms, pest-control businesses, tree surgeons, drain cleaners, solar installers, and garage-door repair businesses. Results are deduplicated by `google_place_id` before writing to the existing `lgs_leads` table.
+The scheduled workflow runs every Monday at 06:00 UTC. It searches every county across the island of Ireland for HVAC contractors, electricians, plumbers, builders, roofers, landscapers, painters, locksmiths, carpet cleaners, property-maintenance firms, pest-control businesses, tree surgeons, drain cleaners, solar installers, and garage-door repair businesses. Results are deduplicated by `google_place_id` before writing to the existing `lgs_leads` table. A manual run can set `draft_leads` to `false` to collect fresh candidates without generating drafts, which is the safe mode used by the dashboard’s Get more leads action.
 
 The drafting step only selects `new`, non-opted-out leads that have **no** row in `lgs_outreach_tracker`. It generates a three-to-four sentence email body, validates it, stores it as `email_draft`, and changes the source lead status to `drafted`. A tracker entry is therefore a hard duplicate-outreach flag: businesses with a prior saved draft are never drafted again automatically. The workflow also has a GitHub Actions concurrency group to prevent overlapping runs.
 
