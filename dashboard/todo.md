@@ -47,5 +47,5 @@ POST-CHANGE NOTE: Final automatic no-chatbot-only dashboard checkpoint saved as 
 
 ## Repository Synchronization
 
-- [ ] Commit and push the verified all-Ireland, no-chatbot, Declined, and Meeting Booked dashboard update to the connected GitHub repository.
-- [ ] Add the dashboard source to `colm-aherne/lead-gen-system-V2/dashboard/` without changing the existing lead-collection workflow.
+- [x] Commit and push the verified all-Ireland, no-chatbot, Declined, and Meeting Booked dashboard update to the connected GitHub repository.
+- [x] Add the dashboard source to `colm-aherne/lead-gen-system-V2/dashboard/` without changing the existing lead-collection workflow.
