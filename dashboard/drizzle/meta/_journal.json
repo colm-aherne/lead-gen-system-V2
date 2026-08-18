@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1786839709256,
+      "tag": "0000_perpetual_the_spike",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1786887843333,
+      "tag": "0001_complex_captain_universe",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1786917195886,
+      "tag": "0002_small_reptil",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1786922218297,
+      "tag": "0003_nasty_master_chief",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1786922445956,
+      "tag": "0004_small_roland_deschain",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1786922648502,
+      "tag": "0005_fuzzy_santa_claus",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1787012575910,
+      "tag": "0006_same_rogue",
+      "breakpoints": true
+    }
+  ]
+}
